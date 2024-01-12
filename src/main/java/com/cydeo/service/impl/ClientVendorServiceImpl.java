@@ -1,4 +1,6 @@
 package com.cydeo.service.impl;
 
-public class ClientVendorServiceImpl {
+import com.cydeo.service.ClientVendorService;
+
+public class ClientVendorServiceImpl implements ClientVendorService {
 }
