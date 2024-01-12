@@ -1,33 +1,33 @@
 package com.cydeo.entity;
 
 import com.cydeo.entity.common.BaseEntity;
-import com.cydeo.enums.CompanyStatus;
+import com.cydeo.enums.ClientVendorType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 
-
-@Entity
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Where(clause = "is_deleted = false") //soft delete-hard delete için ekledim ekstra olabilir!!!
-@Table(name = "companies")
-public class Company extends BaseEntity {
-    @Column(unique = true)
-    private String title;
+@Getter
+@Setter
+@Entity
+@Table(name = "clients_vendors")
+public class ClientVendor extends BaseEntity {
+    private String clientVendorName;
     private String phone;
     private String website;
 
     @Enumerated(EnumType.STRING)
-    private CompanyStatus companyStatus;
+    private ClientVendorType clientVendorType;
 
     @OneToOne
     @JoinColumn(name = "address_id")
     private Address address;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 }
