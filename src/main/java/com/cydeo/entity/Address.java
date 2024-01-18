@@ -17,10 +17,10 @@ import javax.persistence.Table;
 @Builder
 public class Address extends BaseEntity {
 
-    @Column(name = "addressLine1")
+    @Column(name = "address_line1")
     private String addressLine1;
 
-    @Column(name = "addressLine2")
+    @Column(name = "address_line2")
     private String addressLine2;
 
     @Column(name = "city")
@@ -32,7 +32,7 @@ public class Address extends BaseEntity {
     @Column(name = "country")
     private String country;
 
-    @Column(name = "zipcode")
+    @Column(name = "zip_code")
     private String zipCode;
 
 }
