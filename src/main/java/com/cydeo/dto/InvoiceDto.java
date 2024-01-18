@@ -2,20 +2,17 @@ package com.cydeo.dto;
 
 import com.cydeo.enums.InvoiceStatus;
 import com.cydeo.enums.InvoiceType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvoiceDTO {
+public class InvoiceDto {
 
     private Long id;
     private String invoiceNo;
@@ -25,8 +22,8 @@ public class InvoiceDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
-    private CompanyDTO company;
-    private ClientVendorDTO clientVendor;
+    private CompanyDto company;
+    private ClientVendorDto clientVendor;
     private BigDecimal price;
     private BigDecimal tax;
     private BigDecimal total;

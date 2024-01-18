@@ -1,16 +1,14 @@
 package com.cydeo.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-public class UserDTO {
+@Data
+@Builder
+public class UserDto {
+
     private Long id;
     private String username;
 
@@ -23,7 +21,7 @@ public class UserDTO {
     private String firstname;
     private String lastname;
     private String phone;
-    private RoleDTO role;
-    private CompanyDTO company;
+    private RoleDto role;
+    private CompanyDto company;
     private boolean isOnlyAdmin;
 }
