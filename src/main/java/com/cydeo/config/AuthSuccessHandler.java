@@ -31,11 +31,3 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
         }
     }
 }
-/*
-Create "AuthSuccessHandler" class under "config" folder:
-1- Create "AuthSuccessHandler" class under "config" folder
-2- Configure landing pages after successful login
- * "Root User" should land to the "/companies/list" end point
- * "Admin" should land to the "users/list" end point
- * "Manager" and" Employee" should land to the "/dashboard" end point
- */

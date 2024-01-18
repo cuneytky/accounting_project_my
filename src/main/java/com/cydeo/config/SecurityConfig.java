@@ -23,8 +23,11 @@ public class SecurityConfig {
 
         return http
                 .authorizeRequests()
-                .antMatchers("/users/**").hasAnyAuthority("Root User","Admin")
-                .antMatchers("/companies/**").hasAnyAuthority("RootUser")
+                .antMatchers("/users/**","/companies/**").hasAuthority("Root User")
+                .antMatchers("/users/**","/reports/**","/payments/**").hasAuthority("Admin")
+                .antMatchers("/clientVendors/**","/categories/**","/products/**").hasAnyAuthority("Admin","Manager","Employee")
+                .antMatchers("/purchaseInvoices/**", "/salesInvoices/**").hasAnyAuthority("Admin","Manager","Employee")
+                .antMatchers("/reports/profitLossData","/reports/stockData").hasAuthority("Manager")
                 .antMatchers(
                         "/",
                         "/login",
