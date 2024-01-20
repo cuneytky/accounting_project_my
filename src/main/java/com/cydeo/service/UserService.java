@@ -1,7 +1,7 @@
 package com.cydeo.service;
 
-import com.cydeo.dto.UserDTO;
+import com.cydeo.dto.UserDto;
 
 public interface UserService {
-   // UserDTO findByUsername(String username);
+    UserDto findByUsername(String username);
 }

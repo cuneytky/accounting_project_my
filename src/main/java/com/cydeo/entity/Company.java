@@ -7,7 +7,6 @@ import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,3 +33,4 @@ public class Company extends BaseEntity {
     private Address address;
 
 }
+
