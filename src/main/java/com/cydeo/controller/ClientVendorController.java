@@ -6,13 +6,14 @@ import com.cydeo.service.ClientVendorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 @Controller
-@RequestMapping("/clientVendor")
+@RequestMapping("/clientVendors")
 public class ClientVendorController {
 
     private final ClientVendorService clientVendorService;
@@ -21,11 +22,11 @@ public class ClientVendorController {
     }
 
     @GetMapping("/list")
-    public String listClientVendor(Model model){
+    public String listClientVendors(Model model){
 
-        List<ClientVendorDto> clientVendor = clientVendorService.listAllClientVendor();
-        model.addAttribute("clientVendor",clientVendor);
-        return "/clientVendor_list";
+        //  List<ClientVendorDto> clientVendors = clientVendorService.getAllClientVendors();
+        model.addAttribute("clientVendor", clientVendorService.getAllClientVendors());
+        return "/clientVendor/clientVendor-list";
     }
 
     @GetMapping("/create")
@@ -34,15 +35,20 @@ public class ClientVendorController {
         model.addAttribute("newClientVendor", new ClientVendorDto());
         model.addAttribute("clientVendorTypes", Arrays.asList(ClientVendorType.values()));
 
-        return "/clientVendor_create";
+        return "/clientVendor/clientVendor-create";
     }
 
     @PostMapping("/create")
-    public String editCreateVendor(@ModelAttribute("newClientVendor") ClientVendorDto newClientVendor){
+    public String editCreateVendor(@ModelAttribute("newClientVendor") ClientVendorDto newClientVendor, BindingResult bindingResult, Model model){
+
+        if (bindingResult.hasFieldErrors()){
+            model.addAttribute("clientVendorTypes", Arrays.asList(ClientVendorType.values()));
+            return "clientVendor/clientVendor-create";
+        }
 
         clientVendorService.saveClientVendor(newClientVendor);
 
-        return "redirect:/clientVendor_list";
+        return "redirect:/clientVendors/list";
     }
 
     @GetMapping("/update/{id}")
@@ -52,21 +58,27 @@ public class ClientVendorController {
         model.addAttribute("clientVendor", clientVendor);
         model.addAttribute("clientVendorTypes", Arrays.asList(ClientVendorType.values()));
 
-        return "/clientVendor_update";
+        return "/clientVendor/clientVendor-update";
     }
 
     @PostMapping("/update/{id}")
-    public String updateClientVendor(@PathVariable("id") Long id, @ModelAttribute("clientVendor") ClientVendorDto clientVendor){
+    public String updateClientVendor(@PathVariable("id") Long id, @ModelAttribute("clientVendor") ClientVendorDto clientVendor,BindingResult bindingResult, Model model){
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("clientVendorTypes", Arrays.asList(ClientVendorType.values()));
+            return "clientVendor/clientVendor-update";
+        }
 
         clientVendorService.update(id,clientVendor);
 
-        return "redirect:/clientVendor_list";
+        return "redirect:/clientVendors/list";
     }
 
+    @GetMapping("/delete/{id}")
     public String delete(@PathVariable("id") Long id){
 
         clientVendorService.delete(id);
-        return  "redirect:/clientVendor_list";
+        return  "redirect:/clientVendors/list";
     }
 
 

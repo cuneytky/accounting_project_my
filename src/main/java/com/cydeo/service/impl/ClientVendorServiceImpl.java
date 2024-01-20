@@ -29,7 +29,7 @@ public class ClientVendorServiceImpl implements ClientVendorService {
     }
 
     @Override
-    public List<ClientVendorDto> listAllClientVendor() {
+    public List<ClientVendorDto> getAllClientVendors() {
 
         List<ClientVendor> clientVendorlist = clientVendorRepository.findAll();
         return clientVendorlist.stream().map(clientVendor ->
