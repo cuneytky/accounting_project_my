@@ -30,28 +30,24 @@ public class SecurityConfig {
                 .antMatchers("/reports/profitLossData","/reports/stockData").hasAuthority("Manager")
                 .antMatchers(
                         "/",
-                        "/login",
-                        "/fragments/**",
+                        "login",
                         "/assets/**",
                         "/images/**"
                 ).permitAll()
                 .anyRequest().authenticated()
-
                 .and()
                 .formLogin()
                 .loginPage("/login")
                 .successHandler(authSuccessHandler)
                 .failureUrl("/login?error=true")
                 .permitAll()
-
                 .and()
                 .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                 .logoutSuccessUrl("/login")
-
                 .and()
                 .rememberMe()
-                .tokenValiditySeconds(86400)
+                .tokenValiditySeconds(864000)
                 .key("cydeo")
                 .userDetailsService(securityService)
                 .and()
@@ -59,24 +55,3 @@ public class SecurityConfig {
     }
 
 }
-/*
-Create "SecurityConfig" class under "config" folder:
-
-   1. Configure requests based on security necessities ("authorizeRequests()" and "antMatchers()")
-
-   2. Configure "Login" functionality
-Login functionality will use formLogin() option
-End point will be "/login"
-After successful logins, user should land to appropriate pages of the application (will be handled in "AuthSuccess Handler" class)
-For unsuccessful logins, the end point wil be "/login?error=true"
-
-  3. Configure "Logout" functionality -- End point will be "/logout"
-
-  4. Configure "Remember Me" functionality -- Token will be valid for 864000 seconds (240 hours)
-
-As a user, I should be able to login with valid credentials:
-
-1- User should be able to login with valid credentials
-2- User should not be able to login with invalid credentials
-   * When User enters invalid credentials and clicks on the "Login" button or "Enter" key, "Invalid username or password." message should be seen on the screen (only html, with the help of thymleaf)
- */
