@@ -2,6 +2,7 @@ package com.cydeo.fintracker.repository;
 
 
 import com.cydeo.fintracker.entity.ClientVendor;
+import com.cydeo.fintracker.entity.Company;
 import com.cydeo.fintracker.enums.ClientVendorType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,6 @@ public interface ClientVendorRepository extends JpaRepository<ClientVendor, Long
     List<ClientVendor> findAllByCompanyId(Long companyId);
     List<ClientVendor> findAllByCompany_IdAndIsDeleted(Long loggedUserCompanyId, boolean isDeleted);
     List<ClientVendor> findByCompanyIdAndIsDeleted(Long id,boolean deleted);
+    Optional<List<ClientVendor>> findAllByClientVendorTypeAndCompanyOrderByClientVendorName(ClientVendorType clientVendorType, Company company);
+
 }

@@ -4,8 +4,10 @@ import com.cydeo.fintracker.dto.ClientVendorDto;
 import com.cydeo.fintracker.dto.CompanyDto;
 import com.cydeo.fintracker.dto.UserDto;
 import com.cydeo.fintracker.entity.ClientVendor;
+import com.cydeo.fintracker.enums.ClientVendorType;
 import com.cydeo.fintracker.exception.ClientVendorNotFoundException;
 import com.cydeo.fintracker.repository.ClientVendorRepository;
+import com.cydeo.fintracker.service.InvoiceService;
 import com.cydeo.fintracker.service.SecurityService;
 import com.cydeo.fintracker.service.impl.ClientVendorServiceImpl;
 import com.cydeo.fintracker.util.MapperUtil;
@@ -33,10 +35,38 @@ public class ClientVendorServiceImplTest {
 
     @Mock
     private SecurityService securityService;
+
+    @Mock
+    private InvoiceService invoiceService;
+
     @InjectMocks
     private ClientVendorServiceImpl clientVendorServiceImpl;
 
+    @Test
+    public void whenGetAllClientVendors_ItShouldReturnValidClientVendors(){
 
+        ClientVendorType clientVendorType = ClientVendorType.CLIENT;
+        ClientVendor clientVendor1 = new ClientVendor();
+        ClientVendor clientVendor2 = new ClientVendor();
+        List<ClientVendor> mockClientVendors = Arrays.asList(clientVendor1, clientVendor2);
+
+        when(clientVendorRepository.findByClientVendorType(clientVendorType))
+                .thenReturn(Optional.of(mockClientVendors));
+
+        when(mapperUtil.convert(any(ClientVendor.class), eq(new ClientVendorDto())))
+                .thenAnswer(invocation -> {
+                    ClientVendor source = invocation.getArgument(0);
+                    ClientVendorDto target = invocation.getArgument(1);
+                    target.getClientVendorType();
+                    return target;
+                });
+
+        List<ClientVendorDto> result = clientVendorServiceImpl.getAllClientVendors(clientVendorType);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+
+    }
     @Test
     public void testGetAllClientVendors() {
 
