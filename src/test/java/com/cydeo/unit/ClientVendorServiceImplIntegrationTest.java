@@ -15,7 +15,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-public class ClientVendor_ServiceImpl_IntegrationTest {
+public class ClientVendorServiceImplIntegrationTest {
 
     @Autowired
     private ClientVendorRepository clientVendorRepository;
