@@ -1,6 +1,7 @@
 package com.cydeo.fintracker.repository;
 
 
+import com.cydeo.fintracker.dto.ClientVendorDto;
 import com.cydeo.fintracker.entity.ClientVendor;
 import com.cydeo.fintracker.entity.Company;
 import com.cydeo.fintracker.enums.ClientVendorType;
