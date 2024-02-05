@@ -1,6 +1,5 @@
 package com.cydeo.fintracker.client;
 
-
 import com.cydeo.fintracker.dto.response.ExchangeResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;

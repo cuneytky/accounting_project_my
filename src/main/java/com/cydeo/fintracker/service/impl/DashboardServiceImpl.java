@@ -1,10 +1,12 @@
 package com.cydeo.fintracker.service.impl;
 
-import com.cydeo.fintracker.enums.InvoiceStatus;
-import com.cydeo.fintracker.enums.InvoiceType;
 import com.cydeo.fintracker.client.ExchangeClient;
 import com.cydeo.fintracker.dto.response.ExchangeResponse;
 import com.cydeo.fintracker.dto.response.Usd;
+
+import com.cydeo.fintracker.enums.InvoiceStatus;
+import com.cydeo.fintracker.enums.InvoiceType;
+
 import com.cydeo.fintracker.service.DashboardService;
 import com.cydeo.fintracker.service.InvoiceService;
 import org.springframework.stereotype.Service;
