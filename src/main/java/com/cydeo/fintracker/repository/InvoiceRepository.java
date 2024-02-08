@@ -17,4 +17,11 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Invoice> retrieveInvoiceByTypeAndCompany(InvoiceType invoiceType, Company company);
 
     boolean existsByClientVendorId (Long id);
+
+    Invoice findByIdAndIsDeleted(Long invoiceId, Boolean isDeleted);
+
+    Invoice findInvoiceById(Long id);
+
+    Invoice findAllByIdAndIsDeleted(Long invoiceId, Boolean isDeleted);
+
 }

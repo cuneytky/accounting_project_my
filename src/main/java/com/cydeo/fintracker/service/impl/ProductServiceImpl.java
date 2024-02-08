@@ -1,15 +1,25 @@
 package com.cydeo.fintracker.service.impl;
 
+
+import com.cydeo.fintracker.dto.CompanyDto;
+import com.cydeo.fintracker.dto.InvoiceProductDto;
+
 import com.cydeo.fintracker.dto.ProductDto;
+import com.cydeo.fintracker.entity.Company;
 import com.cydeo.fintracker.entity.Product;
 import com.cydeo.fintracker.repository.ProductRepository;
+import com.cydeo.fintracker.service.CompanyService;
 import com.cydeo.fintracker.service.ProductService;
+import com.cydeo.fintracker.service.SecurityService;
 import com.cydeo.fintracker.util.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,33 +30,41 @@ public class ProductServiceImpl implements ProductService {
 
     private final MapperUtil mapperUtil;
     private final ProductRepository productRepository;
+    private final CompanyService companyService;
+    private final SecurityService securityService;
 
 
 
     @Override
     public List<ProductDto> getProducts() {
 
-        List<Product> products= productRepository.findAll();
+        CompanyDto companyDto = companyService.getCompanyDtoByLoggedInUser().get(0);
+
+        Company company = mapperUtil.convert(companyDto, new Company());
+
+        List<Product> products = productRepository.findAllByCompany(company, false);
+
         return products.stream()
-                .map(product -> mapperUtil.convert(product, new ProductDto()))
-                .collect(Collectors.toList());
+                .map(product -> mapperUtil.convert(product, new ProductDto())).collect(Collectors.toList());
     }
 
     @Override
     public ProductDto updateProduct(ProductDto productDto) {
 
-        Optional<Product> oldProduct= productRepository.findById(productDto.getId());
+        Optional<Product> oldProductOptional = productRepository.findById(productDto.getId());
 
-        Product product=oldProduct.get();
+        Product product = mapperUtil.convert(productDto, new Product());
 
-        log.info("Product will be updated : '{}'", product);
+        product.setId(oldProductOptional.get().getId());
+        product.setQuantityInStock(oldProductOptional.get().getQuantityInStock());
 
-        Product newProduct= productRepository.save(mapperUtil.convert(productDto, new Product()));
+        Product savedProduct = productRepository.save(product);
+        log.info("Product will be updated : '{}'", savedProduct);
 
-        ProductDto updatedProduct=mapperUtil.convert(newProduct,productDto);
-        log.info("Product is updated '{}', '{}': ", updatedProduct.getName(), updatedProduct);
+        ProductDto savedProductDto = mapperUtil.convert(savedProduct, new ProductDto());
+        log.info("Product is updated '{}', '{}': ", savedProductDto.getName(), savedProductDto);
 
-        return updatedProduct;
+        return savedProductDto;
     }
 
     @Override
@@ -54,7 +72,7 @@ public class ProductServiceImpl implements ProductService {
 
         Optional<Product> product = productRepository.findById(id);
 
-        ProductDto productConvert= mapperUtil.convert(product, new ProductDto());
+        ProductDto productConvert = mapperUtil.convert(product, new ProductDto());
         log.info("Product is found by id: '{}', '{}'", id, productConvert);
 
         return productConvert;
@@ -63,15 +81,60 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void delete(Long id) {
 
-        productRepository.deleteProductById(id);
-        log.info("Product is deleted '{}', '{}'", id , id);
+        Optional<Product> product = productRepository.findById(id);
+
+        product.get().setIsDeleted(true);
+        productRepository.save(product.get());
+        log.info("Product is deleted '{}', '{}'", id, id);
 
     }
 
     @Override
-    public List<Product> getProductsByCompanyId(Long companyId) {
+    public List<ProductDto> getProductsByCategory(Long id) {
 
-        return productRepository.getProductsById(companyId);
+        List<Product> products = productRepository.findByCategory(id);
+
+        return products.stream().map(product -> mapperUtil.convert(product, new ProductDto()))
+                .collect(Collectors.toList());
 
     }
+
+    public boolean checkInventory(InvoiceProductDto invoiceProductDto) {
+        if (invoiceProductDto.getProduct() == null) {
+            return false;
+        }
+        Product product = productRepository.findByName(invoiceProductDto.getProduct().getName());
+        return product.getQuantityInStock() < invoiceProductDto.getQuantity();
+    }
+
+    public ProductDto save(ProductDto product) {
+
+        Product convertedProduct = mapperUtil.convert(product, new Product());
+
+        productRepository.save(convertedProduct);
+        log.info("Product is saved with description: '{}'", convertedProduct.getName());
+
+        ProductDto createdProduct = mapperUtil.convert(convertedProduct, new ProductDto());
+        log.info("Product is created with description: '{}'", createdProduct.getName());
+
+        return createdProduct;
+
+
+    }
+
+    @Override
+    public BindingResult uniqueName(ProductDto productDto, BindingResult bindingResult) {
+        if (productRepository.existsByName(productDto.getName())){
+            bindingResult.addError(new FieldError("newProduct","name","this product name already existed"));
+        }
+        return bindingResult;
+
+    }
+    @Override
+    public ProductDto increaseProductInventory(Long id, Integer amount) {
+        Product product = productRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Product not found"));
+        product.setQuantityInStock(product.getQuantityInStock() + amount);
+        return mapperUtil.convert(product, new ProductDto());
+    }
 }
+
