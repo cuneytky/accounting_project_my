@@ -6,6 +6,8 @@ import com.cydeo.fintracker.dto.InvoiceProductDto;
 import com.cydeo.fintracker.entity.Company;
 import com.cydeo.fintracker.entity.InvoiceProduct;
 import com.cydeo.fintracker.enums.InvoiceStatus;
+
+import com.cydeo.fintracker.enums.InvoiceType;
 import com.cydeo.fintracker.repository.InvoiceProductRepository;
 import com.cydeo.fintracker.service.CompanyService;
 import com.cydeo.fintracker.service.InvoiceProductService;
@@ -15,8 +17,11 @@ import com.cydeo.fintracker.util.MapperUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -51,7 +56,7 @@ public class InvoiceProductServiceImpl implements InvoiceProductService {
 
         List<InvoiceProduct> allByInvoiceIdAndIsDeleted = invoiceProductRepository.findAllByInvoiceIdAndIsDeleted(id, false);
 
-        log.info("All non-deleted invoice products retrieved by invoice '{}'", allByInvoiceIdAndIsDeleted);
+        log.info("(1) - All non-deleted invoice products retrieved by invoice '{}'", allByInvoiceIdAndIsDeleted);
 
         return allByInvoiceIdAndIsDeleted.stream()
                 .map(invoiceProduct -> calculateTotalInvoiceProduct(invoiceProduct.getId()))
@@ -114,7 +119,7 @@ public class InvoiceProductServiceImpl implements InvoiceProductService {
 
         List<InvoiceProduct> invoiceProductListNotDeleted = invoiceProductRepository.findAllByInvoiceIdAndIsDeleted(id, false);
 
-        log.info("All non-deleted invoice products retrieved by invoice '{}'", invoiceProductListNotDeleted);
+        log.info("(2) - All non-deleted invoice products retrieved by invoice id '{}'", invoiceProductListNotDeleted);
 
         return invoiceProductListNotDeleted.stream()
                 .map(invoiceProduct -> calculateTotalInvoiceProduct(invoiceProduct.getId()))
@@ -135,7 +140,7 @@ public class InvoiceProductServiceImpl implements InvoiceProductService {
         }
         List<InvoiceProduct> list = invoiceProductRepository.findAllByIdAndIsDeleted(invoiceProductDto.getId(), false);
 
-        log.info("All non-deleted invoice products retrieved by invoice product id '{}'", list.size());
+        log.info("(3) - All non-deleted invoice products retrieved by invoice id '{}'", list.size());
 
         // Total cost of each invoiceProduct in the invoice is calculated including the tax
         total = list.stream()
@@ -148,6 +153,92 @@ public class InvoiceProductServiceImpl implements InvoiceProductService {
     }
 
     @Override
+    public void setProfitLossForInvoiceProduct(InvoiceProductDto toBeSoldProduct) {
+
+        List<InvoiceProduct> listOfApprovedPurchasedProducts = invoiceProductRepository
+                .findAllByInvoiceProductsCompanyProductQuantityGreaterThanZero
+                        (InvoiceStatus.APPROVED, InvoiceType.PURCHASE, toBeSoldProduct.getInvoice().getCompany().getTitle()
+                                , toBeSoldProduct.getProduct().getId());
+
+        listOfApprovedPurchasedProducts.sort(Comparator.comparing(p -> p.getInvoice().getDate()));
+
+        BigDecimal profitLoss = BigDecimal.ZERO;
+        toBeSoldProduct.setProfitLoss(profitLoss);
+        toBeSoldProduct.setRemainingQuantity(toBeSoldProduct.getQuantity());
+
+        for (InvoiceProduct purchasedProduct : listOfApprovedPurchasedProducts) {
+
+
+            BigDecimal soldProductTax = toBeSoldProduct.getPrice()
+                    .multiply(BigDecimal.valueOf(toBeSoldProduct.getTax())).divide(BigDecimal.valueOf(100));
+            BigDecimal purchasedProductTax = purchasedProduct.getPrice()
+                    .multiply(BigDecimal.valueOf(purchasedProduct.getTax())).divide(BigDecimal.valueOf(100));
+
+            if (purchasedProduct.getRemainingQuantity() >= toBeSoldProduct.getRemainingQuantity()) {
+
+                profitLoss = (toBeSoldProduct.getPrice().add(soldProductTax).subtract(purchasedProduct.getPrice()
+                        .add(purchasedProductTax))).multiply(BigDecimal.valueOf(toBeSoldProduct.getRemainingQuantity()));
+
+                BigDecimal updatedProfitLoss = toBeSoldProduct.getProfitLoss().add(profitLoss);
+
+                toBeSoldProduct.setProfitLoss(updatedProfitLoss);
+
+                purchasedProduct.setRemainingQuantity(purchasedProduct.getRemainingQuantity() - toBeSoldProduct.getRemainingQuantity());
+                toBeSoldProduct.setRemainingQuantity(0);
+
+                invoiceProductRepository.save(purchasedProduct);
+                invoiceProductRepository.save(mapperUtil.convert(toBeSoldProduct, new InvoiceProduct()));
+                break;
+            } else {
+                profitLoss = (toBeSoldProduct.getPrice().add(soldProductTax).subtract(purchasedProduct.getPrice()
+                        .add(purchasedProductTax))).multiply(BigDecimal.valueOf(purchasedProduct.getRemainingQuantity()));
+
+                BigDecimal updatedProfitLoss = toBeSoldProduct.getProfitLoss().add(profitLoss);
+
+                toBeSoldProduct.setProfitLoss(updatedProfitLoss);
+
+                toBeSoldProduct.setRemainingQuantity(toBeSoldProduct.getRemainingQuantity() - purchasedProduct.getRemainingQuantity());
+                purchasedProduct.setRemainingQuantity(0);
+
+                invoiceProductRepository.save(purchasedProduct);
+                invoiceProductRepository.save(mapperUtil.convert(toBeSoldProduct, new InvoiceProduct()));
+            }
+
+
+        }
+    }
+
+    @Override
+    public BindingResult checkProductStockBeforeAddingToInvoice(InvoiceProductDto productToAdd, Long invoiceId, BindingResult bindingResult) {
+
+        if (productToAdd.getProduct() != null) {
+            CompanyDto company = securityService.getLoggedInUser().getCompany();
+            Company convertedCompany = mapperUtil.convert(company, new Company());
+
+            List<InvoiceProduct> existingInvoiceProducts = invoiceProductRepository.findByInvoice_CompanyAndInvoice_InvoiceStatusAndInvoice_InvoiceTypeOrderByInsertDateTime(convertedCompany, InvoiceStatus.AWAITING_APPROVAL, InvoiceType.SALES);
+
+            Integer totalAddedQuantity = existingInvoiceProducts.stream()
+                    .filter(invoiceProduct -> invoiceProduct.getProduct().getId() == productToAdd.getProduct().getId())
+                    .map(InvoiceProduct::getQuantity)
+                    .reduce(0, Integer::sum);
+
+            Integer stockQuantity = productToAdd.getProduct().getQuantityInStock();
+
+            Integer requestedQuantity = productToAdd.getQuantity();
+
+            if ((totalAddedQuantity + requestedQuantity) > stockQuantity) {
+                String errorMessage = "There are already " + totalAddedQuantity + " " + productToAdd.getProduct().getName() + " added to other unapproved invoices. Available max. amount: " + (stockQuantity - totalAddedQuantity);
+                FieldError stockError = new FieldError("newInvoiceProduct", "quantity", errorMessage);
+                bindingResult.addError(stockError);
+            }
+        }
+
+        return bindingResult;
+
+    }
+
+
+    @Override
     public List<InvoiceProductDto> findAllApprovedInvoiceProducts(InvoiceStatus invoiceStatus) {
 
         CompanyDto companyDto = securityService.getLoggedInUser().getCompany();
@@ -157,4 +248,5 @@ public class InvoiceProductServiceImpl implements InvoiceProductService {
                 .collect(Collectors.toList());
 
     }
+
 }
