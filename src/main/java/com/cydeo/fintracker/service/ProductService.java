@@ -1,11 +1,17 @@
 package com.cydeo.fintracker.service;
 
+
+import com.cydeo.fintracker.dto.CategoryDto;
+
 import com.cydeo.fintracker.dto.InvoiceProductDto;
+
 import com.cydeo.fintracker.dto.ProductDto;
+
 import com.cydeo.fintracker.entity.Product;
 import org.springframework.validation.BindingResult;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductService {
 
@@ -26,4 +32,10 @@ public interface ProductService {
     BindingResult uniqueName(ProductDto productDto, BindingResult bindingResult);
 
     ProductDto increaseProductInventory(Long id, Integer amount);
+
+    ProductDto decreaseProductInventory(Long id, Integer amount);
+
+    BindingResult checkProductByCompanyForPurchase(BindingResult bindingResult);
+
+    BindingResult checkProductByCompanyForSales(BindingResult bindingResult);
 }
