@@ -5,7 +5,7 @@ import com.cydeo.fintracker.dto.CountryDto;
 import com.cydeo.fintracker.dto.UserDto;
 import com.cydeo.fintracker.entity.Company;
 import com.cydeo.fintracker.enums.CompanyStatus;
-import com.cydeo.fintracker.feignclient.CountryFeignClient;
+import com.cydeo.fintracker.client.CountryFeignClient;
 import com.cydeo.fintracker.repository.CompanyRepository;
 import com.cydeo.fintracker.service.CompanyService;
 import com.cydeo.fintracker.service.SecurityService;
